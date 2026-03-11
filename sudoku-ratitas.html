@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pongo a Prueba a las Ratitas</title>
+<style>
+html, body {
+  margin: 0; padding: 0;
+  background: #ff85a1;
+  font-family: -apple-system, Helvetica, Arial, sans-serif;
+  min-height: 100%;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 8px 30px;
+}
+
+/* HEADER */
+h1 {
+  color: white;
+  font-size: 22px;
+  text-align: center;
+  margin: 8px 0 2px;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.sub {
+  color: rgba(255,255,255,0.85);
+  font-size: 13px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+/* STATS */
+.stats {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.stat-box {
+  background: rgba(255,255,255,0.25);
+  border-radius: 12px;
+  padding: 6px 14px;
+  text-align: center;
+  color: white;
+}
+.stat-box .val { font-size: 20px; font-weight: 700; }
+.stat-box .lbl { font-size: 10px; opacity: 0.85; }
+
+/* DIFFICULTY */
+.pills {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.pill {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 2px solid white;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pill.active {
+  background: white;
+  color: #ff4d79;
+}
+
+/* GRID */
+.grid-wrap {
+  background: white;
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+  margin-bottom: 14px;
+}
+table {
+  border-collapse: collapse;
+}
+td {
+  width: 36px;
+  height: 36px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid #ffb3c6;
+  background: white;
+  color: #3d1a24;
+}
+/* thick borders for 3x3 boxes */
+td.bl { border-left: 2px solid #ff4d79; }
+td.bt { border-top: 2px solid #ff4d79; }
+
+td.given    { background: #fff8f0; color: #3d1a24; }
+td.userinp  { color: #ff4d79; }
+td.selected { background: #ffd1e3; }
+td.hilite   { background: #ffe9f0; }
+td.sameval  { background: #fff0f5; }
+td.boxdone  { background: #d1fae5; color: #059669; }
+td.shake    { background: #ffe4e6; }
+
+/* TOOLS */
+.tools {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.tool {
+  background: rgba(255,255,255,0.25);
+  border: 2px solid rgba(255,255,255,0.5);
+  color: white;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  min-width: 60px;
+}
+.tool.on { background: white; color: #ff4d79; border-color: white; }
+
+/* NUMPAD */
+.numpad {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 360px;
+}
+.nmbtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+  background: white;
+  color: #ff4d79;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.nmbtn.done {
+  background: #d1fae5;
+  color: #059669;
+}
+
+/* NEW GAME */
+.newgame {
+  background: white;
+  color: #ff4d79;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+/* TOAST */
+#toast {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #3d1a24;
+  color: white;
+  padding: 18px 28px;
+  border-radius: 18px;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  z-index: 999;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  white-space: pre-line;
+  line-height: 1.5;
+  max-width: 80vw;
+}
+
+/* WIN */
+#winscreen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(255,133,161,0.97);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+#winscreen.show { display: flex; }
+#winscreen h2 { color: white; font-size: 28px; text-align: center; margin: 16px 0 8px; }
+#winscreen p { color: rgba(255,255,255,0.9); font-size: 15px; margin-bottom: 20px; }
+#winscreen .win-t { font-size: 60px; }
+#winscreen .wbtn {
+  background: white; color: #ff4d79;
+  border: none; border-radius: 14px;
+  padding: 14px 32px; font-size: 17px; font-weight: 700; cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<div style="font-size:36px; margin-top:8px;">&#x1F42D;</div>
+<h1>Pongo a Prueba<br>a las Ratitas</h1>
+<div class="sub">&#x1F9C0; El Sudoku m&#xE1;s adorable</div>
+
+<div class="stats">
+  <div class="stat-box"><div class="val" id="timer">00:00</div><div class="lbl">Tiempo</div></div>
+  <div class="stat-box"><div class="val" id="remaining">--</div><div class="lbl">Quedan</div></div>
+  <div class="stat-box"><div class="val" id="solved">0</div><div class="lbl">Hechas</div></div>
+</div>
+
+<div class="pills">
+  <div class="pill active" id="p-easy" onclick="setDiff('easy')">&#x1F338; F&#xE1;cil</div>
+  <div class="pill" id="p-medium" onclick="setDiff('medium')">&#x1F9C0; Medio</div>
+  <div class="pill" id="p-hard" onclick="setDiff('hard')">&#x1F525; Dif&#xED;cil</div>
+</div>
+
+<div class="grid-wrap">
+  <table id="grid"></table>
+</div>
+
+<div class="tools">
+  <div class="tool" onclick="undo()">&#x21A9; Deshacer</div>
+  <div class="tool" onclick="erase()">&#x1F9F9; Borrar</div>
+  <div class="tool" id="noteBtn" onclick="toggleNotes()">&#x1F4DD; Notas</div>
+  <div class="tool" onclick="hint()">&#x1F4A1; Pista</div>
+</div>
+
+<div class="numpad" id="numpad"></div>
+
+<button class="newgame" onclick="newGame()">&#x1F42D; Nueva Partida</button>
+
+<div id="toast"></div>
+
+<div id="winscreen">
+  <div class="win-t">&#x1F389;</div>
+  <h2>&#xA1;Inmunda rata<br>campeona!</h2>
+  <p>Has completado el Sudoku &#x1F42D;&#x2728;</p>
+  <div class="stats" style="margin-bottom:20px;">
+    <div class="stat-box"><div class="val" id="wtime">--</div><div class="lbl">Tiempo</div></div>
+    <div class="stat-box"><div class="val">9/9</div><div class="lbl">Cuadros</div></div>
+  </div>
+  <button class="wbtn" onclick="newGame()">&#x1F9C0; Jugar de nuevo</button>
+</div>
+
+<script>
+var sol, puzzle, board, notes, sel, hist, noteMode, diff, secs, timerId, doneBoxes;
+diff = 'easy';
+
+function shuffle(a) {
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function isValid(b, r, c, n) {
+  for (var i = 0; i < 9; i++) {
+    if (b[r][i] === n || b[i][c] === n) return false;
+  }
+  var br = Math.floor(r/3)*3, bc = Math.floor(c/3)*3;
+  for (var dr = 0; dr < 3; dr++)
+    for (var dc = 0; dc < 3; dc++)
+      if (b[br+dr][bc+dc] === n) return false;
+  return true;
+}
+
+function doSolve(b) {
+  for (var r = 0; r < 9; r++) {
+    for (var c = 0; c < 9; c++) {
+      if (b[r][c] === 0) {
+        var nums = shuffle([1,2,3,4,5,6,7,8,9]);
+        for (var i = 0; i < nums.length; i++) {
+          if (isValid(b, r, c, nums[i])) {
+            b[r][c] = nums[i];
+            if (doSolve(b)) return true;
+            b[r][c] = 0;
+          }
+        }
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+function makePuzzle(s, d) {
+  var removes = {easy:34, medium:45, hard:54}[d] || 34;
+  var p = [];
+  for (var i = 0; i < 9; i++) p.push(s[i].slice());
+  var removed = 0;
+  var positions = shuffle([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
+    21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,
+    41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,
+    61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80]);
+  for (var k = 0; k < positions.length; k++) {
+    if (removed >= removes) break;
+    var r = Math.floor(positions[k]/9), c = positions[k]%9;
+    var bak = p[r][c]; p[r][c] = 0;
+    var t = [];
+    for (var i = 0; i < 9; i++) t.push(p[i].slice());
+    if (!doSolve(t)) { p[r][c] = bak; }
+    else { removed++; }
+  }
+  return p;
+}
+
+function initGame() {
+  var full = [];
+  for (var i = 0; i < 9; i++) { full.push([0,0,0,0,0,0,0,0,0]); }
+  doSolve(full);
+  sol = full;
+  var s2 = [];
+  for (var i = 0; i < 9; i++) s2.push(sol[i].slice());
+  puzzle = makePuzzle(s2, diff);
+  board = [];
+  for (var i = 0; i < 9; i++) board.push(puzzle[i].slice());
+  notes = [];
+  for (var r = 0; r < 9; r++) {
+    notes.push([]);
+    for (var c = 0; c < 9; c++) notes[r].push({});
+  }
+  sel = null; hist = []; noteMode = false; secs = 0;
+  doneBoxes = {};
+  clearInterval(timerId);
+  timerId = setInterval(function(){ secs++; renderTimer(); }, 1000);
+  document.getElementById('winscreen').className = '';
+  document.getElementById('noteBtn').className = 'tool';
+  renderGrid();
+  renderNumpad();
+  renderStats();
+}
+
+function renderGrid() {
+  var g = document.getElementById('grid');
+  g.innerHTML = '';
+  for (var r = 0; r < 9; r++) {
+    var tr = document.createElement('tr');
+    for (var c = 0; c < 9; c++) {
+      var td = document.createElement('td');
+      var cls = [];
+      if (c % 3 === 0 && c > 0) cls.push('bl');
+      if (r % 3 === 0 && r > 0) cls.push('bt');
+      if (puzzle[r][c] !== 0) {
+        cls.push('given');
+        td.textContent = puzzle[r][c];
+      } else if (board[r][c] !== 0) {
+        cls.push('userinp');
+        td.textContent = board[r][c];
+      } else {
+        var ns = notes[r][c];
+        var hasNote = false;
+        for (var n = 1; n <= 9; n++) if (ns[n]) { hasNote = true; break; }
+        if (hasNote) {
+          td.style.fontSize = '8px';
+          td.style.lineHeight = '1.2';
+          td.style.padding = '1px';
+          var t = '';
+          for (var n = 1; n <= 9; n++) t += (ns[n] ? n : '.') + ((n%3===0)?'\n':' ');
+          td.textContent = t.trim();
+        }
+      }
+      if (sel && sel[0]===r && sel[1]===c) cls.push('selected');
+      else if (sel) {
+        var sr=sel[0], sc=sel[1];
+        var sv = board[sr][sc]||puzzle[sr][sc];
+        var cv = board[r][c]||puzzle[r][c];
+        if (r===sr || c===sc || (Math.floor(r/3)===Math.floor(sr/3) && Math.floor(c/3)===Math.floor(sc/3))) cls.push('hilite');
+        if (sv && cv && cv===sv) cls.push('sameval');
+      }
+      var boxId = Math.floor(r/3)*3 + Math.floor(c/3);
+      if (doneBoxes[boxId]) cls.push('boxdone');
+      td.className = cls.join(' ');
+      (function(row, col){ td.onclick = function(){ sel=[row,col]; renderGrid(); }; })(r,c);
+      tr.appendChild(td);
+    }
+    g.appendChild(tr);
+  }
+}
+
+function renderNumpad() {
+  var pad = document.getElementById('numpad');
+  pad.innerHTML = '';
+  var cnt = [0,0,0,0,0,0,0,0,0,0];
+  for (var r = 0; r < 9; r++)
+    for (var c = 0; c < 9; c++) {
+      var v = board[r][c]||puzzle[r][c];
+      if (v) cnt[v]++;
+    }
+  for (var n = 1; n <= 9; n++) {
+    var btn = document.createElement('button');
+    btn.className = 'nmbtn' + (cnt[n]>=9?' done':'');
+    btn.textContent = n;
+    (function(num){ btn.onclick = function(){ inputNum(num); }; })(n);
+    pad.appendChild(btn);
+  }
+}
+
+function renderTimer() {
+  var m = Math.floor(secs/60);
+  var s = secs%60;
+  document.getElementById('timer').textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+}
+
+function renderStats() {
+  var empty=0, done=0;
+  for (var r=0; r<9; r++) for (var c=0; c<9; c++)
+    if (puzzle[r][c]===0) { if (board[r][c]===0) empty++; else done++; }
+  document.getElementById('remaining').textContent = empty;
+  document.getElementById('solved').textContent = done;
+}
+
+function inputNum(n) {
+  if (!sel) return;
+  var r=sel[0], c=sel[1];
+  if (puzzle[r][c] !== 0) return;
+
+  if (noteMode) {
+    var prev = {};
+    for (var k in notes[r][c]) prev[k] = notes[r][c][k];
+    if (notes[r][c][n]) delete notes[r][c][n]; else notes[r][c][n] = true;
+    hist.push({type:'note', r:r, c:c, prev:prev});
+    renderGrid(); return;
+  }
+
+  // Block wrong answer
+  if (n !== sol[r][c]) {
+    var cells = document.getElementById('grid').rows[r].cells[c];
+    cells.className = (cells.className||'') + ' shake';
+    cells.style.background = '#ffe4e6';
+    setTimeout(function(){ renderGrid(); }, 500);
+    return;
+  }
+
+  hist.push({type:'val', r:r, c:c, prev:board[r][c]});
+  board[r][c] = n;
+
+  // clear notes
+  for (var i=0; i<9; i++) { delete notes[i][c][n]; delete notes[r][i][n]; }
+  var br=Math.floor(r/3)*3, bc=Math.floor(c/3)*3;
+  for (var dr=0; dr<3; dr++) for (var dc=0; dc<3; dc++) delete notes[br+dr][bc+dc][n];
+
+  checkBox(r,c);
+  renderGrid(); renderNumpad(); renderStats(); checkWin();
+}
+
+function checkBox(r, c) {
+  var boxId = Math.floor(r/3)*3 + Math.floor(c/3);
+  if (doneBoxes[boxId]) return;
+  var br=Math.floor(r/3)*3, bc=Math.floor(c/3)*3;
+  for (var dr=0; dr<3; dr++)
+    for (var dc=0; dc<3; dc++) {
+      var v = board[br+dr][bc+dc]||puzzle[br+dr][bc+dc];
+      if (!v) return;
+    }
+  doneBoxes[boxId] = true;
+  showToast('\u00A1Bien hecho,\ninmunda rata! \uD83D\uDC2D\uD83E\uDDC0');
+}
+
+function undo() {
+  if (!hist.length) return;
+  var last = hist.pop();
+  if (last.type==='val') board[last.r][last.c] = last.prev;
+  else notes[last.r][last.c] = last.prev;
+  renderGrid(); renderNumpad(); renderStats();
+}
+
+function erase() {
+  if (!sel) return;
+  var r=sel[0], c=sel[1];
+  if (puzzle[r][c]!==0) return;
+  if (board[r][c]!==0) {
+    hist.push({type:'val',r:r,c:c,prev:board[r][c]});
+    board[r][c]=0;
+  } else {
+    var prev={};
+    for (var k in notes[r][c]) prev[k]=notes[r][c][k];
+    hist.push({type:'note',r:r,c:c,prev:prev});
+    notes[r][c]={};
+  }
+  renderGrid(); renderNumpad(); renderStats();
+}
+
+function toggleNotes() {
+  noteMode = !noteMode;
+  document.getElementById('noteBtn').className = noteMode ? 'tool on' : 'tool';
+}
+
+function hint() {
+  var empty = [];
+  for (var r=0; r<9; r++) for (var c=0; c<9; c++)
+    if (puzzle[r][c]===0 && board[r][c]===0) empty.push([r,c]);
+  if (!empty.length) return;
+  var pick = empty[Math.floor(Math.random()*empty.length)];
+  sel = pick;
+  inputNum(sol[pick[0]][pick[1]]);
+}
+
+function checkWin() {
+  for (var r=0; r<9; r++) for (var c=0; c<9; c++)
+    if ((board[r][c]||puzzle[r][c]) !== sol[r][c]) return;
+  clearInterval(timerId);
+  var m=Math.floor(secs/60), s=secs%60;
+  document.getElementById('wtime').textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+  setTimeout(function(){ document.getElementById('winscreen').className='show'; }, 600);
+}
+
+function setDiff(d) {
+  diff = d;
+  document.getElementById('p-easy').className   = 'pill' + (d==='easy'  ?' active':'');
+  document.getElementById('p-medium').className = 'pill' + (d==='medium'?' active':'');
+  document.getElementById('p-hard').className   = 'pill' + (d==='hard'  ?' active':'');
+  newGame();
+}
+
+function newGame() {
+  document.getElementById('winscreen').className = '';
+  initGame();
+}
+
+var toastTimer;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.style.display='none'; }, 2200);
+}
+
+document.addEventListener('keydown', function(e) {
+  if (!sel) return;
+  var r=sel[0], c=sel[1];
+  var k=e.key;
+  if (k>='1'&&k<='9') { inputNum(parseInt(k)); return; }
+  if (k==='Backspace'||k==='Delete') { erase(); return; }
+  if (k==='ArrowUp'&&r>0) sel=[r-1,c];
+  if (k==='ArrowDown'&&r<8) sel=[r+1,c];
+  if (k==='ArrowLeft'&&c>0) sel=[r,c-1];
+  if (k==='ArrowRight'&&c<8) sel=[r,c+1];
+  renderGrid();
+});
+
+initGame();
+</script>
+</body>
+</html>
